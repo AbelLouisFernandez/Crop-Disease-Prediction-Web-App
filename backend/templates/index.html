@@ -1,0 +1,318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI based Crop Disease Detection — AI Crop & Pulse Disease Detection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'styles/main.css' %}">
+</head>
+
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────── -->
+<nav id="navbar">
+    <a href="#home" class="nav-brand">
+        <div class="brand-icon">
+            <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M14 8L20 11V17L14 20L8 17V11L14 8Z" fill="currentColor" opacity="0.5"/>
+            </svg>
+        </div>
+        <span class="brand-name">AI based Crop Disease Detection</span>
+    </a>
+
+    <ul class="nav-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how">How It Works</a></li>
+
+        {% if request.user.is_authenticated %}
+            <li><a href="/predict">Predict</a></li>
+            <li><a href="/history">History</a></li>
+            <li><a href="/logout" class="nav-logout">Logout</a></li>
+            <li class="nav-avatar">
+                {% if user.profile_picture %}
+                    <a href="/profile/edit/"><img src="{{ user.profile_picture.url }}" class="profile-pic" alt="Profile"></a>
+                {% else %}
+                    <a href="/profile/edit/"><img src="{% static 'images/default-avatar.png' %}" class="profile-pic" alt="Profile"></a>
+                {% endif %}
+            </li>
+        {% else %}
+            <li><a href="/login" class="nav-link-plain">Login</a></li>
+            <li><a href="/signup" class="nav-cta">Sign Up</a></li>
+        {% endif %}
+    </ul>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+    </button>
+</nav>
+
+{% if messages %}
+<div class="toast-container">
+    {% for message in messages %}
+        <div class="toast {{ message.tags }}">
+            {% if message.tags == 'success' %}
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/>
+                    <path d="M5 8L7 10L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            {% else %}
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/>
+                    <path d="M8 5V8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="8" cy="11" r="0.7" fill="currentColor"/>
+                </svg>
+            {% endif %}
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+    <a href="#home">Home</a>
+    <a href="#features">Features</a>
+    <a href="#how">How It Works</a>
+    {% if request.user.is_authenticated %}
+        <a href="/predict">Predict</a>
+        <a href="/history">History</a>
+        <a href="/logout">Logout</a>
+    {% else %}
+        <a href="/login">Login</a>
+        <a href="/signup">Sign Up</a>
+    {% endif %}
+</div>
+
+
+<!-- ── Hero ───────────────────────────────────────────── -->
+<section class="hero" id="home">
+    <canvas id="networkCanvas"></canvas>
+
+    <div class="hero-grid-overlay"></div>
+
+    <div class="hero-content">
+        <!---<div class="hero-badge">
+            <span class="badge-dot"></span>
+            AI-Powered Plant Pathology
+        </div>
+        --->
+        <h1 class="hero-heading">
+            Detect crop<br/>
+            diseases<br/>
+            <em>instantly.</em>
+        </h1>
+
+        <p class="hero-sub">
+            Upload a leaf image and get accurate disease diagnosis in seconds —
+            powered by deep learning trained on thousands of plant samples.
+        </p>
+
+        <div class="hero-actions">
+            {% if request.user.is_authenticated %}
+                <a href="/predict" class="btn-primary">
+                    Start Detecting
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M3 9H15M15 9L10 4M15 9L10 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
+            {% else %}
+                <a href="/signup" class="btn-primary">
+                    Get Started Free
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M3 9H15M15 9L10 4M15 9L10 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
+                <a href="#features" class="btn-ghost">See How It Works</a>
+            {% endif %}
+        </div>
+
+        <div class="hero-stats">
+            <div class="stat">
+                <span class="stat-num">40+</span>
+                <span class="stat-label">Disease Classes</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-num">90%</span>
+                <span class="stat-label">Accuracy</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-num">&lt;15s</span>
+                <span class="stat-label">Prediction Time</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-scroll-hint">
+        <div class="scroll-line"></div>
+        <span>Scroll</span>
+    </div>
+</section>
+
+
+<!-- ── Features ───────────────────────────────────────── -->
+<section class="features" id="features">
+    <div class="section-inner">
+        <div class="section-label">Capabilities</div>
+        <h2 class="section-heading">Everything you need<br/><em>to protect your crops</em></h2>
+        <p class="section-sub">Our platform combines cutting-edge AI with an intuitive interface so anyone can diagnose plant disease — no expertise required.</p>
+
+        <div class="cards-grid">
+
+            <div class="feature-card" data-delay="0">
+                <div class="card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M17 2C17 2 22 7 22 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M8 12L11 15L16 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3>Deep Learning CNN</h3>
+                <p>Convolutional neural networks trained on hundreds of thousands of annotated crop disease images across diverse conditions.</p>
+            </div>
+
+            <div class="feature-card" data-delay="80">
+                <div class="card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M12 2V5M12 19V22M2 12H5M19 12H22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M5.636 5.636L7.757 7.757M16.243 16.243L18.364 18.364M18.364 5.636L16.243 7.757M7.757 16.243L5.636 18.364" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>Instant Analysis</h3>
+                <p>Results delivered in under 15 seconds. Our optimised inference pipeline ensures no waiting, even on complex images.</p>
+            </div>
+
+            <div class="feature-card" data-delay="160">
+                <div class="card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 22C12 22 3 16 3 9C3 5.134 7.134 2 12 2C16.866 2 21 5.134 21 9C21 16 12 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
+                        <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                </div>
+                <h3>40+ Crop Varieties</h3>
+                <p>Supports pulses, vegetables, grains, and fruit crops — covering the most common and economically important diseases.</p>
+            </div>
+
+            <div class="feature-card" data-delay="240">
+                <div class="card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                        <rect x="13" y="3" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                        <rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M17 13V21M13 17H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>Detection History</h3>
+                <p>Every scan is saved to your personal history. Review past diagnoses, track outbreaks, and export your reports.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- ── How It Works ────────────────────────────────────── -->
+<section class="how" id="how">
+    <div class="section-inner">
+        <div class="section-label">Process</div>
+        <h2 class="section-heading">Three steps to<br/><em>a diagnosis</em></h2>
+
+        <div class="steps-row">
+
+            <div class="step-card" data-delay="0">
+                <div class="step-number">01</div>
+                <div class="step-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                        <rect x="4" y="4" width="20" height="20" rx="3" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M14 10V18M10 14H18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>Upload Image</h3>
+                <p>Take or upload a clear photo of the affected leaf. Any standard smartphone camera works perfectly.</p>
+            </div>
+
+            <div class="step-connector">
+                <svg width="40" height="12" viewBox="0 0 40 12" fill="none">
+                    <path d="M0 6H36M36 6L30 2M36 6L30 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+
+            <div class="step-card" data-delay="100">
+                <div class="step-number">02</div>
+                <div class="step-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                        <circle cx="14" cy="14" r="9" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M10 14L13 17L18 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14 5V3M14 25V23M5 14H3M25 14H23" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>AI Analysis</h3>
+                <p>Our CNN scans the image for disease patterns, texture anomalies, and colour shifts across the leaf surface.</p>
+            </div>
+
+            <div class="step-connector">
+                <svg width="40" height="12" viewBox="0 0 40 12" fill="none">
+                    <path d="M0 6H36M36 6L30 2M36 6L30 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+
+            <div class="step-card" data-delay="200">
+                <div class="step-number">03</div>
+                <div class="step-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                        <path d="M6 4H18L22 8V24H6V4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                        <path d="M18 4V8H22" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                        <path d="M10 13H18M10 17H15" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>Get Results</h3>
+                <p>Receive a detailed diagnosis with the disease name, confidence score, and actionable treatment recommendations.</p>
+            </div>
+
+        </div>
+
+        <div class="how-cta">
+            {% if request.user.is_authenticated %}
+                <a href="/predict" class="btn-primary dark">Try It Now →</a>
+            {% else %}
+                <a href="/signup" class="btn-primary dark">Try It Free →</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+
+<!-- ── Footer ─────────────────────────────────────────── -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <div class="brand-icon small">
+                <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+                    <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                    <path d="M14 8L20 11V17L14 20L8 17V11L14 8Z" fill="currentColor" opacity="0.5"/>
+                </svg>
+            </div>
+            <span>AI based Crop Disease Detection</span>
+        </div>
+        <p class="footer-copy">© 2026 AI based Crop Disease Detection</p>
+        <div class="footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Contact</a>
+        </div>
+    </div>
+</footer>
+
+
+<script src="{% static 'js/main.js' %}"></script>
+
+</body>
+</html>

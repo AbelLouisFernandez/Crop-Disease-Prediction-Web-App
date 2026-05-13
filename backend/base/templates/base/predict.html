@@ -1,0 +1,345 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predict — AI based Crop Disease Detection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'styles/predict.css' %}">
+</head>
+
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+
+<div class="page-wrapper">
+
+    <div class="predict-card">
+
+        <!-- Left panel -->
+        <div class="card-left">
+            <div class="brand-mark">
+                <div class="brand-icon">
+                    <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                        <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <path d="M14 8L20 11V17L14 20L8 17V11L14 8Z" fill="currentColor" opacity="0.4"/>
+                    </svg>
+                </div>
+                <span class="brand-name">AI based Crop Disease Detection</span>
+            </div>
+
+            <div class="left-content">
+                <h1 class="left-heading">Diagnose<br/>your<br/><em>crop.</em></h1>
+                <p class="left-sub">Upload a clear photo of the affected leaf and our AI will identify the disease in seconds.</p>
+
+                <div class="tips-list">
+                    <div class="tip-item">
+                        <div class="tip-dot"></div>
+                        <span>Use natural daylight when possible</span>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-dot"></div>
+                        <span>Focus on the affected area of the leaf</span>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-dot"></div>
+                        <span>Avoid blurry or dark images</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="left-footer">
+                <a href="{% url 'home' %}" class="back-link">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+
+        <!-- Right panel -->
+        <div class="card-right">
+            <div class="form-header">
+                <h2>Disease Detection</h2>
+                <p>Upload a leaf image to get your diagnosis</p>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" id="predictForm">
+                {% csrf_token %}
+
+                <!-- Upload zone -->
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" name="leaf_image" id="leafInput" accept="image/*" required>
+                    <div class="upload-placeholder" id="uploadPlaceholder">
+                        <div class="upload-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                                <path d="M16 4V22M16 4L10 10M16 4L22 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6 24H26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                <path d="M6 28H26" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.4"/>
+                            </svg>
+                        </div>
+                        <p class="upload-title">Drop your leaf image here</p>
+                        <p class="upload-sub">or click to browse · JPG, PNG, WEBP</p>
+                    </div>
+                    <div class="preview-container" id="previewContainer" style="display:none;">
+                        <img id="previewImage"
+                             src="{% if image_url %}{{ image_url }}{% endif %}"
+                             alt="Leaf preview">
+                        <button type="button" class="remove-image" id="removeImage" aria-label="Remove image">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                <path d="M2 2L12 12M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Top result pill (shown after prediction) -->
+                {% if results %}
+                <div class="top-result-pill">
+                    <div class="pill-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/>
+                            <path d="M5 8L7 10L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="pill-label">Top Prediction</div>
+                        <div class="pill-value">{{ results.0.crop }} — {{ results.0.disease }}</div>
+                        <button class="report-btn" id="reportBtn"
+                                data-crop="{{ results.0.crop }}" data-disease="{{ results.0.disease }}">
+                            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                                <path d="M3 2.5H9.5L12 5V12.5H3V2.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                                <path d="M9.5 2.5V5H12" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                                <path d="M5 7.5H10M5 9.5H8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                            </svg>
+                            Generate AI Report powered by Gemini
+                        </button>
+
+                        <div id="reportContainer" class="report-container"></div>
+                    </div>
+                    <div class="pill-confidence">{{ results.0.confidence }}%</div>
+                </div>
+                {% endif %}
+
+                <!-- Submit button -->
+                <button type="submit" class="submit-btn" id="predictBtn">
+                    <span id="btnText">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.4"/>
+                            <path d="M6 9L8.5 11.5L12.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Analyse Image
+                    </span>
+                    <span id="btnLoading" style="display:none;">
+                        <div class="spinner"></div>
+                        Analysing…
+                    </span>
+                </button>
+
+                <p class="loading-text" id="loadingText">Running inference on your image…</p>
+
+            </form>
+
+            <!-- Results -->
+            {% if results %}
+            <div class="results-section" id="resultSection">
+                <div class="results-header">
+                    <span class="results-label">All Predictions</span>
+                    <span class="results-count">{{ results|length }} result{{ results|length|pluralize }}</span>
+                </div>
+
+                {% for r in results %}
+                <div class="result-row" style="animation-delay: {{ forloop.counter0 }}00ms">
+                    <div class="result-meta">
+                        <span class="result-name">{{ r.crop }} — {{ r.disease }}</span>
+                        <span class="result-pct">{{ r.confidence }}%</span>
+                    </div>
+                    <div class="conf-track">
+                        <div class="conf-fill" style="width: {{ r.confidence }}%;"
+                             data-confidence="{{ r.confidence }}"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+/* ── File input & preview ─────────────────────────── */
+const fileInput       = document.getElementById("leafInput");
+const uploadZone      = document.getElementById("uploadZone");
+const uploadPlaceholder = document.getElementById("uploadPlaceholder");
+const previewContainer  = document.getElementById("previewContainer");
+const previewImage    = document.getElementById("previewImage");
+const removeBtn       = document.getElementById("removeImage");
+const resultSection   = document.getElementById("resultSection");
+
+function showPreview(src) {
+    previewImage.src = src;
+    uploadPlaceholder.style.display = "none";
+    previewContainer.style.display  = "flex";
+    uploadZone.classList.add("has-image");
+}
+
+function clearPreview() {
+    previewImage.src = "";
+    uploadPlaceholder.style.display = "flex";
+    previewContainer.style.display  = "none";
+    uploadZone.classList.remove("has-image");
+    fileInput.value = "";
+    if (resultSection) resultSection.innerHTML = "";
+    document.querySelector(".top-result-pill") && document.querySelector(".top-result-pill").remove();
+}
+
+// Show existing image on load
+{% if image_url %}
+showPreview("{{ image_url }}");
+{% endif %}
+
+fileInput.addEventListener("change", function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => showPreview(e.target.result);
+    reader.readAsDataURL(file);
+});
+
+if (removeBtn) removeBtn.addEventListener("click", clearPreview);
+
+// Drag & drop
+uploadZone.addEventListener("dragover", e => { e.preventDefault(); uploadZone.classList.add("drag-over"); });
+uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag-over"));
+uploadZone.addEventListener("drop", e => {
+    e.preventDefault();
+    uploadZone.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        const reader = new FileReader();
+        reader.onload = ev => showPreview(ev.target.result);
+        reader.readAsDataURL(file);
+    }
+});
+
+/* ── Submit / loading ─────────────────────────────── */
+const form      = document.getElementById("predictForm");
+const btnText   = document.getElementById("btnText");
+const btnLoad   = document.getElementById("btnLoading");
+const loadText  = document.getElementById("loadingText");
+
+form.addEventListener("submit", function () {
+    btnText.style.display  = "none";
+    btnLoad.style.display  = "inline-flex";
+    loadText.style.display = "block";
+});
+
+/* ── Animate confidence bars ──────────────────────── */
+document.querySelectorAll(".conf-fill").forEach(bar => {
+    const target = bar.dataset.confidence;
+    bar.style.width = "0%";
+    setTimeout(() => { bar.style.width = target + "%"; }, 200);
+});
+
+
+if (reportBtn) {
+    reportBtn.addEventListener("click", async function () {
+        const crop    = reportBtn.dataset.crop;
+        const disease = reportBtn.dataset.disease;
+
+        // Loading state
+        reportBtn.disabled = true;
+        reportBtn.innerHTML = `<div class="spinner report-spinner"></div> Generating…`;
+        reportContainer.innerHTML = '';
+
+        try {
+            const response = await fetch("/generate-report/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                },
+                body: JSON.stringify({ crop, disease })
+            });
+
+            const data = await response.json();
+
+            // Build prevention bullets
+            const bullets = (data.prevention || [])
+                .map(pt => `
+                    <li>
+                        <span class="bullet-dot"></span>
+                        <span>${pt}</span>
+                    </li>`)
+                .join('');
+
+            reportContainer.innerHTML = `
+                <div class="report-box">
+                    <div class="report-box-header">
+                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                            <path d="M3 2.5H9.5L12 5V12.5H3V2.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                            <path d="M9.5 2.5V5H12" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                            <path d="M5 7.5H10M5 9.5H8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                        </svg>
+                        AI Report
+                    </div>
+                    <div class="report-body">
+
+                        <div class="report-section">
+                            <div class="report-section-title">
+                                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                                    <circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+                                    <path d="M6.5 4V7M6.5 9V9.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                </svg>
+                                Disease Description
+                            </div>
+                            <p class="report-description">${data.description || "No description available."}</p>
+                        </div>
+
+                        <div class="report-divider"></div>
+
+                        <div class="report-section">
+                            <div class="report-section-title">
+                                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                                    <path d="M2 7L5 10L11 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Prevention & Management
+                            </div>
+                            <ul class="report-bullets">${bullets}</ul>
+                        </div>
+
+                    </div>
+                </div>`;
+
+        } catch (err) {
+            reportContainer.innerHTML = `
+                <div class="report-error-inline">
+                    Could not generate report. Please try again.
+                </div>`;
+        }
+
+        // Restore button
+        reportBtn.disabled = false;
+        reportBtn.innerHTML = `
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <path d="M3 2.5H9.5L12 5V12.5H3V2.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                <path d="M9.5 2.5V5H12" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                <path d="M5 7.5H10M5 9.5H8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Regenerate Report`;
+    });
+}
+</script>
+
+</body>
+</html>

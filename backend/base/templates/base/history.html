@@ -1,0 +1,270 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction History — AI based Crop Disease Detection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'styles/history.css' %}">
+</head>
+
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-orb orb-1"></div>
+<div class="bg-orb orb-2"></div>
+
+<!-- Navbar -->
+<nav id="navbar">
+    <a href="{% url 'home' %}" class="nav-brand">
+        <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+                <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M14 8L20 11V17L14 20L8 17V11L14 8Z" fill="currentColor" opacity="0.3"/>
+            </svg>
+        </div>
+        <span class="brand-name">AI based Crop Disease Detection</span>
+    </a>
+
+    <div class="nav-right">
+        <a href="{% url 'home' %}" class="nav-link">Home</a>
+        <a href="/predict" class="nav-link">New Prediction</a>
+        <a href="/profile/edit/" class="nav-avatar-link">
+            {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" class="profile-pic" alt="Profile">
+            {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" class="profile-pic" alt="Profile">
+            {% endif %}
+        </a>
+    </div>
+</nav>
+
+<!-- Page -->
+<div class="page-wrapper">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-text">
+            <div class="section-label">History</div>
+            <h1>Your Predictions</h1>
+            <p>A record of every crop diagnosis you've run.</p>
+        </div>
+        <a href="/predict" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                <path d="M9 2V16M2 9H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            New Prediction
+        </a>
+    </div>
+
+    <!-- Stats Bar -->
+    {% if history %}
+    <div class="stats-bar">
+        <div class="stat-pill">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+            <span>{{ history|length }} scan{{ history|length|pluralize }}</span>
+        </div>
+        <div class="stat-divider"></div>
+
+        <!-- Sort Dropdown -->
+        <div class="sort-wrapper" id="sortWrapper">
+            <button class="sort-btn" id="sortBtn" aria-haspopup="true" aria-expanded="false">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 4H12M4 7H10M6 10H8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+                <span id="sortLabel">Most Recent</span>
+                <svg class="sort-chevron" id="sortChevron" width="11" height="11" viewBox="0 0 12 12" fill="none">
+                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+
+            <div class="sort-menu" id="sortMenu" role="menu">
+                <button class="sort-option active" data-sort="newest" role="menuitem">
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+                        <path d="M7 4V7.5L9.5 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                    Most Recent
+                </button>
+                <button class="sort-option" data-sort="oldest" role="menuitem">
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+                        <path d="M7 10V6.5L4.5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                    Oldest First
+                </button>
+                <button class="sort-option" data-sort="confidence" role="menuitem">
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                        <path d="M2 11H4V7.5H2V11ZM5.5 11H7.5V3.5H5.5V11ZM9 11H11V6H9V11Z" fill="currentColor" opacity="0.85"/>
+                    </svg>
+                    Most Confident
+                </button>
+                <button class="sort-option" data-sort="common" role="menuitem">
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                        <path d="M7 1.5L8.8 5.2L12.9 5.6L9.9 8.3L10.8 12.3L7 10.2L3.2 12.3L4.1 8.3L1.1 5.6L5.2 5.2L7 1.5Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                    </svg>
+                    Most Common
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Grid -->
+    <div class="history-grid" id="historyGrid">
+
+        {% for item in history %}
+        <div class="history-card"
+             data-date="{{ item.created_at|date:'U' }}"
+             data-confidence="{{ item.confidence }}"
+             data-disease="{{ item.disease }}"
+             style="animation-delay: {{ forloop.counter0 }}00ms">
+
+            <div class="card-image-wrap">
+                <img src="{{ item.image.url }}" alt="{{ item.crop }} leaf" loading="lazy">
+                <div class="card-image-overlay">
+                    <span class="confidence-badge {% if item.confidence >= 85 %}high{% elif item.confidence >= 60 %}mid{% else %}low{% endif %}">
+                        {{ item.confidence }}%
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="card-tags">
+                    <span class="tag crop-tag">{{ item.crop }}</span>
+                </div>
+                <h3 class="disease-name">{{ item.disease }}</h3>
+                <div class="confidence-row">
+                    <span class="conf-label">Confidence</span>
+                    <div class="conf-bar-wrap">
+                        <div class="conf-bar">
+                            <div class="conf-fill {% if item.confidence >= 85 %}high{% elif item.confidence >= 60 %}mid{% else %}low{% endif %}"
+                                 style="width: {{ item.confidence }}%"></div>
+                        </div>
+                        <span class="conf-value">{{ item.confidence }}%</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+                        <path d="M7 4V7.5L9.5 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                    <span>{{ item.created_at|date:"M d, Y · H:i" }}</span>
+                </div>
+            </div>
+
+        </div>
+        {% empty %}
+
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
+                    <path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.3"/>
+                    <path d="M24 16L34 21V31L24 36L14 31V21L24 16Z" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/>
+                    <path d="M18 24H30M24 18V30" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h3>No predictions yet</h3>
+            <p>Upload a crop leaf image to run your first AI diagnosis.</p>
+            <a href="/predict" class="btn-primary">Start Your First Scan</a>
+        </div>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+<script>
+/* ── Navbar shrink ───────────────────────────────────── */
+const navbar = document.getElementById("navbar");
+window.addEventListener("scroll", () => {
+    navbar.classList.toggle("shrink", window.scrollY > 40);
+});
+
+/* ── Sort dropdown ───────────────────────────────────── */
+const sortBtn     = document.getElementById("sortBtn");
+const sortMenu    = document.getElementById("sortMenu");
+const sortLabel   = document.getElementById("sortLabel");
+const sortChevron = document.getElementById("sortChevron");
+const grid        = document.getElementById("historyGrid");
+
+if (sortBtn) {
+    sortBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = sortMenu.classList.toggle("open");
+        sortBtn.setAttribute("aria-expanded", isOpen);
+        sortChevron.style.transform = isOpen ? "rotate(180deg)" : "rotate(0deg)";
+    });
+
+    document.addEventListener("click", () => {
+        sortMenu.classList.remove("open");
+        sortBtn.setAttribute("aria-expanded", "false");
+        sortChevron.style.transform = "rotate(0deg)";
+    });
+
+    sortMenu.querySelectorAll(".sort-option").forEach(opt => {
+        opt.addEventListener("click", (e) => {
+            e.stopPropagation();
+            sortMenu.querySelectorAll(".sort-option").forEach(o => o.classList.remove("active"));
+            opt.classList.add("active");
+            sortLabel.textContent = opt.textContent.trim();
+            sortMenu.classList.remove("open");
+            sortBtn.setAttribute("aria-expanded", "false");
+            sortChevron.style.transform = "rotate(0deg)";
+            sortCards(opt.dataset.sort);
+        });
+    });
+}
+
+function sortCards(mode) {
+    const cards = Array.from(grid.querySelectorAll(".history-card"));
+    if (!cards.length) return;
+
+    // Build disease frequency map for "most common"
+    const freq = {};
+    cards.forEach(c => {
+        const d = c.dataset.disease;
+        freq[d] = (freq[d] || 0) + 1;
+    });
+
+    cards.sort((a, b) => {
+        switch (mode) {
+            case "newest":
+                return Number(b.dataset.date) - Number(a.dataset.date);
+            case "oldest":
+                return Number(a.dataset.date) - Number(b.dataset.date);
+            case "confidence":
+                return Number(b.dataset.confidence) - Number(a.dataset.confidence);
+            case "common": {
+                const diff = (freq[b.dataset.disease] || 0) - (freq[a.dataset.disease] || 0);
+                // Tie-break by newest
+                return diff !== 0 ? diff : Number(b.dataset.date) - Number(a.dataset.date);
+            }
+        }
+    });
+
+    // Re-append with staggered fade-in
+    cards.forEach((card, i) => {
+        card.style.transition = "none";
+        card.style.opacity    = "0";
+        card.style.transform  = "translateY(10px)";
+        grid.appendChild(card);
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            card.style.transition = `opacity 0.3s ease ${i * 45}ms, transform 0.3s ease ${i * 45}ms`;
+            card.style.opacity    = "1";
+            card.style.transform  = "translateY(0)";
+        }));
+    });
+}
+</script>
+
+</body>
+</html>
